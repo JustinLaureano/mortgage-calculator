@@ -553,7 +553,11 @@
             updateAmortizationTable(amortizationSchedule.yearlyData);
             
             // Update chart
-            updateChart(amortizationSchedule.balanceData);
+            updateChart(
+                amortizationSchedule.balanceData,
+                amortizationSchedule.principalData,
+                amortizationSchedule.interestData
+            );
             
             return {
                 loanAmount,
@@ -574,10 +578,14 @@
             let totalInterest = 0;
             const balanceData = [];
             const yearlyData = [];
+            const principalData = [];
+            const interestData = [];
             
             let yearlyPrincipal = 0;
             let yearlyInterest = 0;
             let yearlyPayment = 0;
+            let cumulativePrincipal = 0;
+            let cumulativeInterest = 0;
             
             for (let i = 1; i <= numberOfPayments; i++) {
                 const interestPayment = balance * monthlyInterestRate;
@@ -586,8 +594,13 @@
                 balance -= principalPayment;
                 if (balance < 0) balance = 0;
                 
+                cumulativePrincipal += principalPayment;
+                cumulativeInterest += interestPayment;
+                
                 totalInterest += interestPayment;
                 balanceData.push(balance);
+                principalData.push(cumulativePrincipal);
+                interestData.push(cumulativeInterest);
                 
                 yearlyPrincipal += principalPayment;
                 yearlyInterest += interestPayment;
@@ -611,6 +624,8 @@
             
             return {
                 balanceData,
+                principalData,
+                interestData,
                 yearlyData,
                 totalInterest
             };
@@ -636,7 +651,7 @@
         };
         
         // Update chart
-        const updateChart = (balanceData) => {
+        const updateChart = (balanceData, principalData, interestData) => {
             const labels = Array.from({ length: balanceData.length }, (_, i) => i + 1);
             
             if (loanBalanceChart) {
@@ -647,14 +662,35 @@
                 type: 'line',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: 'Remaining Balance',
-                        data: balanceData,
-                        borderColor: '#4361ee',
-                        backgroundColor: 'rgba(67, 97, 238, 0.1)',
-                        fill: true,
-                        tension: 0.1
-                    }]
+                    datasets: [
+                        {
+                            label: 'Remaining Balance',
+                            data: balanceData,
+                            borderColor: '#4361ee',
+                            backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                            fill: true,
+                            tension: 0.1,
+                            order: 3
+                        },
+                        {
+                            label: 'Principal Paid',
+                            data: principalData,
+                            borderColor: '#3a0ca3',
+                            backgroundColor: 'rgba(58, 12, 163, 0.1)',
+                            fill: true,
+                            tension: 0.1,
+                            order: 2
+                        },
+                        {
+                            label: 'Interest Paid',
+                            data: interestData,
+                            borderColor: '#7209b7',
+                            backgroundColor: 'rgba(114, 9, 183, 0.1)',
+                            fill: true,
+                            tension: 0.1,
+                            order: 1
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
@@ -669,7 +705,7 @@
                         y: {
                             title: {
                                 display: true,
-                                text: 'Balance ($)'
+                                text: 'Amount ($)'
                             },
                             ticks: {
                                 callback: function(value) {
@@ -682,9 +718,14 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return 'Balance: $' + formatCurrencyWithDecimals(context.raw);
+                                    const label = context.dataset.label || '';
+                                    const value = context.raw;
+                                    return `${label}: $${formatCurrencyWithDecimals(value)}`;
                                 }
                             }
+                        },
+                        legend: {
+                            position: 'top'
                         }
                     }
                 }
