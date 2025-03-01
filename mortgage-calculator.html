@@ -7,15 +7,27 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --primary-color: #4361ee;
-            --secondary-color: #3a0ca3;
-            --accent-color: #7209b7;
+            --primary-color: #4CAF50;
+            --secondary-color: #388E3C;
+            --accent-color: #2E7D32;
             --background-color: #f8f9fa;
             --card-color: #ffffff;
             --text-color: #212529;
             --border-color: #dee2e6;
-            --success-color: #4cc9f0;
+            --success-color: #66BB6A;
             --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        :root[data-theme="dark"] {
+            --primary-color: #66BB6A;
+            --secondary-color: #4CAF50;
+            --accent-color: #388E3C;
+            --background-color: #1a1a1a;
+            --card-color: #2d2d2d;
+            --text-color: #e1e1e1;
+            --border-color: #404040;
+            --success-color: #81C784;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
 
         * {
@@ -265,9 +277,41 @@
         .reset-button:hover {
             background-color: #c82333;
         }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--card-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .theme-toggle i {
+            font-size: 1.2em;
+        }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+    <button class="theme-toggle" id="themeToggle">
+        <i class="fas fa-sun"></i>
+        <span>Toggle Theme</span>
+    </button>
     <div class="container">
         <header>
             <h1>Mortgage Payment Visualizer</h1>
@@ -666,8 +710,8 @@
                         {
                             label: 'Remaining Balance',
                             data: balanceData,
-                            borderColor: '#4361ee',
-                            backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                            borderColor: '#4CAF50',
+                            backgroundColor: 'rgba(76, 175, 80, 0.1)',
                             fill: true,
                             tension: 0.1,
                             order: 3
@@ -675,8 +719,8 @@
                         {
                             label: 'Principal Paid',
                             data: principalData,
-                            borderColor: '#3a0ca3',
-                            backgroundColor: 'rgba(58, 12, 163, 0.1)',
+                            borderColor: '#388E3C',
+                            backgroundColor: 'rgba(56, 142, 60, 0.1)',
                             fill: true,
                             tension: 0.1,
                             order: 2
@@ -684,8 +728,8 @@
                         {
                             label: 'Interest Paid',
                             data: interestData,
-                            borderColor: '#7209b7',
-                            backgroundColor: 'rgba(114, 9, 183, 0.1)',
+                            borderColor: '#2E7D32',
+                            backgroundColor: 'rgba(46, 125, 50, 0.1)',
                             fill: true,
                             tension: 0.1,
                             order: 1
@@ -805,6 +849,34 @@
         if (!localStorage.getItem('mortgageCalculatorInputs')) {
             calculateMortgage();
         }
+        
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+        
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+        
+        function updateThemeIcon(theme) {
+            if (theme === 'dark') {
+                themeIcon.className = 'fas fa-moon';
+            } else {
+                themeIcon.className = 'fas fa-sun';
+            }
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
         
         // Reset button functionality
         const resetButton = document.getElementById('resetButton');
