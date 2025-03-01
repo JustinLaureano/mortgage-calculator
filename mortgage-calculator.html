@@ -248,6 +248,23 @@
             max-height: 400px;
             overflow-y: auto;
         }
+        
+        .reset-button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+        
+        .reset-button:hover {
+            background-color: #c82333;
+        }
     </style>
 </head>
 <body>
@@ -272,7 +289,7 @@
                     <label>
                         Down Payment: <span class="value"><span id="downPaymentPercentValue">20</span>% ($<span id="downPaymentValue">60,000</span>)</span>
                     </label>
-                    <input type="range" id="downPaymentPercent" min="0" max="50" step="1" value="20">
+                    <input type="range" id="downPaymentPercent" min="0" max="50" step="0.5" value="20">
                 </div>
 
                 <div class="input-group">
@@ -316,8 +333,10 @@
                     <label>
                         PMI Rate: <span class="value"><span id="pmiRateValue">0.5</span>% annually</span>
                     </label>
-                    <input type="range" id="pmiRate" min="0" max="2" step="0.1" value="0.5">
+                    <input type="range" id="pmiRate" min="0" max="2" step="0.01" value="0.5">
                 </div>
+
+                <button id="resetButton" class="reset-button">Reset to Defaults</button>
             </div>
 
             <div class="results-section">
@@ -505,7 +524,7 @@
             propertyTaxValue.textContent = (propertyTaxRate * 100).toFixed(1);
             homeInsuranceValue.textContent = formatCurrency(annualHomeInsurance);
             hoaFeesValue.textContent = formatCurrency(monthlyHOA);
-            pmiRateValue.textContent = (pmiRate * 100).toFixed(1);
+            pmiRateValue.textContent = (pmiRate * 100).toFixed(2);
             
             monthlyPaymentElement.textContent = `$${formatCurrencyWithDecimals(totalMonthlyPayment)}`;
             principalInterestElement.textContent = `$${formatCurrencyWithDecimals(monthlyPrincipalInterest)}`;
@@ -696,11 +715,75 @@
         ];
         
         inputElements.forEach(input => {
-            input.addEventListener('input', calculateMortgage);
+            input.addEventListener('input', () => {
+                calculateMortgage();
+                saveToLocalStorage();
+            });
         });
         
-        // Initial calculation
-        calculateMortgage();
+        // Save inputs to local storage
+        const saveToLocalStorage = () => {
+            const inputValues = {
+                homePrice: homePriceInput.value,
+                downPaymentPercent: downPaymentPercentInput.value,
+                loanTerm: loanTermInput.value,
+                interestRate: interestRateInput.value,
+                propertyTax: propertyTaxInput.value,
+                homeInsurance: homeInsuranceInput.value,
+                hoaFees: hoaFeesInput.value,
+                pmiRate: pmiRateInput.value
+            };
+            
+            localStorage.setItem('mortgageCalculatorInputs', JSON.stringify(inputValues));
+        };
+        
+        // Load inputs from local storage
+        const loadFromLocalStorage = () => {
+            const savedInputs = localStorage.getItem('mortgageCalculatorInputs');
+            
+            if (savedInputs) {
+                const inputValues = JSON.parse(savedInputs);
+                
+                homePriceInput.value = inputValues.homePrice || 300000;
+                downPaymentPercentInput.value = inputValues.downPaymentPercent || 20;
+                loanTermInput.value = inputValues.loanTerm || 30;
+                interestRateInput.value = inputValues.interestRate || 4.5;
+                propertyTaxInput.value = inputValues.propertyTax || 1.2;
+                homeInsuranceInput.value = inputValues.homeInsurance || 1200;
+                hoaFeesInput.value = inputValues.hoaFees || 0;
+                pmiRateInput.value = inputValues.pmiRate || 0.5;
+                
+                calculateMortgage();
+            }
+        };
+        
+        // Load saved values on page load
+        loadFromLocalStorage();
+        
+        // Initial calculation (if no saved values)
+        if (!localStorage.getItem('mortgageCalculatorInputs')) {
+            calculateMortgage();
+        }
+        
+        // Reset button functionality
+        const resetButton = document.getElementById('resetButton');
+        resetButton.addEventListener('click', () => {
+            // Reset all inputs to default values
+            homePriceInput.value = 300000;
+            downPaymentPercentInput.value = 20;
+            loanTermInput.value = 30;
+            interestRateInput.value = 4.5;
+            propertyTaxInput.value = 1.2;
+            homeInsuranceInput.value = 1200;
+            hoaFeesInput.value = 0;
+            pmiRateInput.value = 0.5;
+            
+            // Clear local storage
+            localStorage.removeItem('mortgageCalculatorInputs');
+            
+            // Recalculate with default values
+            calculateMortgage();
+        });
     </script>
 </body>
 </html> 
